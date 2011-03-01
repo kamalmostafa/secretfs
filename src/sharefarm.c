@@ -129,14 +129,14 @@ inject_share(sharefarm_content *tail, const char *fname)
   struct stat sbuf;
   
   if (find_sharenum(fname, &stem, &sharenum) < 0) {
-    return NULL;
+    return tail;
   }
   
   i = stat(fname, &sbuf);
   
   if ((i < 0) && errno != ENOENT) {
     free(stem);
-    return NULL;
+    return tail;
   }
   
   c = find_content(tail, stem);
@@ -173,7 +173,7 @@ find_all_shares(sharefarm_content **ct)
   int ret = 0;
   int i;
   struct dirent *dire = NULL, *direp;
-  sharefarm_content *c = NULL, *ctmp = NULL;
+  sharefarm_content *c = NULL;
   
   if (d == NULL)
     return -ENOENT;
@@ -185,13 +185,7 @@ find_all_shares(sharefarm_content **ct)
       break;
     if (dire->d_name[0] == '.')
       continue;
-    ctmp = inject_share(c, dire->d_name);
-    if (ctmp == NULL) {
-      ret = -errno;
-      free_content(c);
-      goto out;
-    }
-    c = ctmp;
+    c = inject_share(c, dire->d_name);
   }
   
   if (i != 0) ret = -i;
