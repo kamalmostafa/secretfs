@@ -16,6 +16,7 @@
 #include <fcntl.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 
 
 static char *share_farm = NULL;
@@ -49,6 +50,7 @@ init_sharefarm(char *farm)
 typedef struct {
   const char *fname;
   int sharenum;
+  bool present;
 } sharefarm_content_shares;
 
 typedef struct sharefarm_content_s {
@@ -120,6 +122,19 @@ find_sharenum(const char *fname, char **stem, int *sharenum)
   return 0;
 }
 
+static void
+update_share_mode(sharefarm_content *c)
+{
+  int i;
+  
+  for (i = 0; i < c->sharecount; ++i) {
+    if (c->shares[i].present == false) {
+      c->statinfo.st_mode &= ~(0777);
+    }
+  }
+  c->statinfo.st_mode &= ~(0377);
+}
+
 static sharefarm_content *
 inject_share(sharefarm_content *tail, const char *fname)
 {
@@ -139,18 +154,23 @@ inject_share(sharefarm_content *tail, const char *fname)
     return tail;
   }
   
+  printf("stat(%s) == %d (errno == %d)\n", fname, i, errno);
+  
   c = find_content(tail, stem);
   
   if (c == NULL) {
     c = calloc(1, sizeof(*c));
     c->next = tail;
     c->stem = stem;
+    c->statinfo.st_mode = S_IFREG;
     if (i == 0)
       memcpy(&c->statinfo, &sbuf, sizeof(sbuf));
     c->sharecount = 1;
     c->shares = calloc(1, sizeof(*c->shares));
     c->shares[0].fname = strdup(fname);
     c->shares[0].sharenum = sharenum;
+    c->shares[0].present = (i == 0);
+    update_share_mode(c);
     return c;
   }
   
@@ -160,8 +180,11 @@ inject_share(sharefarm_content *tail, const char *fname)
   c->shares = realloc(c->shares, sizeof(*c->shares) * (c->sharecount + 1));
   c->shares[c->sharecount].fname = strdup(fname);
   c->shares[c->sharecount].sharenum = sharenum;
+  c->shares[c->sharecount].present = (i == 0);
   c->sharecount++;
   free(stem);
+  
+  update_share_mode(c);
   
   return tail;
 }
