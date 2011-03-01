@@ -40,9 +40,6 @@ init_sharefarm(char *farm)
   
   closedir(d);
   
-  if (chdir(farm) < 0)
-    return -1;
-  
   share_farm = farm;
   return 0;
 }
@@ -192,11 +189,15 @@ inject_share(sharefarm_content *tail, const char *fname)
 static int
 find_all_shares(sharefarm_content **ct)
 {
-  DIR *d = opendir(share_farm);
+  DIR *d;
   int ret = 0;
   int i;
   struct dirent *dire = NULL, *direp;
   sharefarm_content *c = NULL;
+  
+  chdir(share_farm);
+  
+  d = opendir(".");
   
   if (d == NULL)
     return -ENOENT;

@@ -198,8 +198,9 @@ main(int argc, char **argv)
     return 1;
   }
   
-  argv[1] = argv[2];
-  argv[2] = "-d";
+  argv[1] = argv[0];
+  
+  --argc; ++argv;
   
   return fuse_main(argc, argv, &secretfs_op, NULL);
 }
