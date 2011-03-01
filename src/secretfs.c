@@ -17,18 +17,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-static void
-debug_ctx(void)
-{
-  struct fuse_context *c = fuse_get_context();
-  printf("Caller is %d owned by %d in group %d\n", c->pid, c->uid, c->gid);
-  fflush(stdout);
-}
-
 static int
 secretfs_getattr(const char *path, struct stat *sbuf)
 {
-  debug_ctx();
   if (strcmp(path, "/") == 0) {
     memcpy(sbuf, &farm_sbuf, sizeof(*sbuf));
     return 0;
@@ -134,7 +125,6 @@ secretfs_releasedir(const char *path, struct fuse_file_info *ffi)
 static int
 secretfs_statfs(const char *path, struct statvfs *svbuf)
 {
-  debug_ctx();
   svbuf->f_bsize = 1024;    /* optimal transfer block size */
   svbuf->f_blocks = 1024;   /* total data blocks in file system */
   svbuf->f_bfree = 1;    /* free blocks in fs */

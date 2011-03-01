@@ -185,8 +185,6 @@ find_all_shares(sharefarm_content **ct)
       break;
     if (dire->d_name[0] == '.')
       continue;
-    printf("Found %s\n", dire->d_name);
-    fflush(stdout);
     ctmp = inject_share(c, dire->d_name);
     if (ctmp == NULL) {
       ret = -errno;
