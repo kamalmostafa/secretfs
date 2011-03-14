@@ -184,6 +184,7 @@ int
 main(int argc, char **argv)
 {
   int i;
+  char *ptmp;
   
   if (sizeof(uint64_t) < sizeof(void*))
     return 10;
@@ -193,10 +194,32 @@ main(int argc, char **argv)
     return 1;
   }
   
+  ptmp = realpath(argv[1], NULL);
+  
+  if (ptmp == NULL) {
+    perror("realpath");
+    fprintf(stderr, "Unable to translate %s into a full path\n", argv[1]);
+    return 1;
+  }
+  
+  argv[1] = ptmp;
+  
+  ptmp = realpath(argv[2], NULL);
+  
+  if (ptmp == NULL) {
+    perror("realpath");
+    fprintf(stderr, "Unble to translate %s into a full path\n", argv[2]);
+    return 1;
+  }
+  
+  argv[2] = ptmp;
+  
   if ((i = init_sharefarm(argv[1])) < 0) {
     perror("init_sharefarm()");
     return 1;
   }
+  
+  printf("SecretFS mounting %s onto %s...\n", argv[1], argv[2]);
   
   argv[1] = argv[0];
   
