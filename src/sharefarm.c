@@ -22,11 +22,42 @@
 static char *share_farm = NULL;
 struct stat farm_sbuf;
 
+static void
+sharefarm_fill_rand( unsigned char *buffer,
+                   unsigned int count )
+{
+  size_t n;
+  FILE *devrandom;
+
+  devrandom = fopen("/dev/urandom", "rb");
+  if (!devrandom) {
+    perror("Unable to read /dev/urandom");
+    abort();
+  }
+  n = fread(buffer, 1, count, devrandom);
+  if (n < count) {
+      perror("Short read from /dev/urandom");
+      abort();
+  }
+  fclose(devrandom);
+}
+
 int
 init_sharefarm(char *farm)
 {
   DIR *d;
   
+  srandom( time(NULL) );
+
+  if (access("/dev/urandom", R_OK) == 0) {
+    gfshare_fill_rand = sharefarm_fill_rand;
+  } else {
+    fprintf(stderr, "\
+%s: Cannot access /dev/urandom, so using random() instead (not secure!)\n\
+", "secretfs");
+    gfshare_fill_rand = gfshare_bad_idea_but_fill_rand_using_random;
+  }
+
   if (stat(farm, &farm_sbuf) < 0)
     return -1;
   
