@@ -190,13 +190,17 @@ static int
 find_all_shares(sharefarm_content **ct)
 {
   DIR *d;
-  int ret = 0;
+  int ret;
   int i;
   struct dirent *dire = NULL, *direp;
   sharefarm_content *c = NULL;
   
-  chdir(share_farm);
+  ret = chdir(share_farm);
+  if (ret < 0)
+    return ret;
   
+  ret = 0;
+
   d = opendir(".");
   
   if (d == NULL)
